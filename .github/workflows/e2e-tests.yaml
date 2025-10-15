@@ -65,6 +65,9 @@ jobs:
           # Create namespace
           kubectl create namespace rag-e2e || true
           
+          # Build chart dependencies
+          helm dependency build deploy/helm/rag
+
           # Install the chart with e2e values
           helm install rag deploy/helm/rag \
             --namespace rag-e2e \
