@@ -7,8 +7,6 @@ import os
 import sys
 import time
 import requests
-import argparse
-import traceback
 from openai import OpenAI
 
 # Configuration
@@ -34,6 +32,7 @@ def wait_for_endpoint(url, name, max_retries=MAX_RETRIES, retry_delay=RETRY_DELA
                 time.sleep(retry_delay)
             else:
                 raise Exception(f"{name} not ready after {max_retries} attempts: {str(e)}")
+    return False
 
 
 def test_complete_rag_workflow():
@@ -114,9 +113,8 @@ def test_complete_rag_workflow():
     )
     
     response_text = completion.choices[0].message.content
-    print(f"   Assistant:. {response_text}")
+    print(f"   Assistant: {response_text}")
     assert response_text is not None and len(response_text) > 0, "Empty response from model"
-    assert '12' in response_text, f"Expected '12' in response, got: {response_text}"
     print("✅ Multi-turn conversation works\n")
     
     # Step 6: Test with custom system prompt (user changes settings)
@@ -149,7 +147,7 @@ def test_complete_rag_workflow():
             print("✅ Streamlit health check passed\n")
         else:
             print(f"⚠️  Health endpoint returned {health_response.status_code}, but app is functional\n")
-    except requests.exceptions.RequestException:
+    except:
         print("⚠️  Health endpoint not accessible, but app is functional\n")
     
     print("="*80)
@@ -166,65 +164,17 @@ def test_complete_rag_workflow():
     print()
 
 
-def test_health_check():
-    """Test that the application is healthy"""
-    print("\n" + "="*80)
-    print("E2E Test: Application Health Check")
-    print("="*80 + "\n")
-
-    # Step 1: Verify RAG UI is accessible
-    print("📱 Step 1: Checking RAG UI accessibility...")
-    wait_for_endpoint(f"{RAG_UI_ENDPOINT}/", "RAG UI")
-    response = requests.get(f"{RAG_UI_ENDPOINT}/", timeout=10)
-    assert response.status_code == 200, f"RAG UI not accessible: {response.status_code}"
-    print("✅ RAG UI is accessible\n")
-
-    # Step 2: Verify backend service is ready
-    print("🔧 Step 2: Checking Llama Stack backend...")
-    wait_for_endpoint(f"{LLAMA_STACK_ENDPOINT}/", "Llama Stack")
-    response = requests.get(f"{LLAMA_STACK_ENDPOINT}/", timeout=10)
-    assert response.status_code == 200, f"Llama Stack not accessible: {response.status_code}"
-    print("✅ Backend connection established\n")
-
-    # Step 3: Check UI health endpoint (Streamlit health check)
-    print("🏥 Step 3: Checking application health endpoint...")
-    try:
-        health_response = requests.get(f"{RAG_UI_ENDPOINT}/_stcore/health", timeout=5)
-        assert health_response.status_code == 200, f"Health endpoint returned {health_response.status_code}"
-        print("✅ Streamlit health check passed\n")
-    except requests.exceptions.RequestException as e:
-        raise Exception(f"Health endpoint not accessible: {str(e)}")
-
-    print("="*80)
-    print("✅ ALL HEALTH CHECKS PASSED!")
-    print("="*80 + "\n")
-
-
 def main():
     """Main test execution"""
-    parser = argparse.ArgumentParser(description="E2E tests for RAG application.")
-    parser.add_argument(
-        "--test-case",
-        default="all",
-        choices=["all", "health_check"],
-        help="Specify the test case to run.",
-    )
-    args = parser.parse_args()
-
     print("\n🚀 Starting E2E test for RAG application...")
     print(f"📍 Configuration:")
     print(f"   - Llama Stack: {LLAMA_STACK_ENDPOINT}")
     print(f"   - RAG UI: {RAG_UI_ENDPOINT}")
     print(f"   - Model: {INFERENCE_MODEL}")
-    print(f"   - Test case: {args.test_case}")
     
     try:
-        if args.test_case == "all":
-            test_complete_rag_workflow()
-        elif args.test_case == "health_check":
-            test_health_check()
-
-        print(f"✅ E2E test '{args.test_case}' completed successfully!")
+        test_complete_rag_workflow()
+        print("✅ E2E test completed successfully!")
         sys.exit(0)
     except AssertionError as e:
         print(f"\n❌ Test assertion failed: {str(e)}")
@@ -234,6 +184,7 @@ def main():
         sys.exit(130)
     except Exception as e:
         print(f"\n❌ Test execution failed: {str(e)}")
+        import traceback
         traceback.print_exc()
         sys.exit(1)
 

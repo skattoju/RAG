@@ -18,7 +18,7 @@ The test simulates a real user journey through the application:
 
 ### Prerequisites
 - [kind](https://kind.sigs.k8s.io/) - Kubernetes in Docker
-- [kubectl](https://kubernetes.io/docs/tasks/tools/) - Kubernetes CLI
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) - Kubernetes CLI  
 - [helm](https://helm.sh/docs/intro/install/) - Package manager
 - Python 3.11+
 
@@ -75,7 +75,7 @@ kind delete cluster --name rag-e2e
 
 The E2E test runs automatically on:
 - Pull requests to `main`
-- Pushes to `main`
+- Pushes to `main`  
 - Manual trigger via workflow dispatch
 
 View workflow: `.github/workflows/e2e-tests.yaml`
@@ -114,15 +114,14 @@ kubectl get events -n rag-e2e --sort-by='.lastTimestamp'
 
 ## Adding More Tests
 
-To add additional workflow tests, edit `test_user_workflow.py`:
+To add additional workflow tests, edit the `test_complete_rag_workflow()` function in `test_user_workflow.py`:
 
 ```python
-def test_your_workflow():
-    """Test description"""
-    print("🧪 Testing your feature...")
-    # Your test code
-    assert condition, "Error message"
-    print("✅ Test passed\n")
+# Add your test step
+print("🧪 Step X: Testing your feature...")
+# Your test code
+assert condition, "Error message"
+print("✅ Test passed\n")
 ```
 
 ## CI Expectations

@@ -27,27 +27,22 @@ jobs:
         run: |
           pip install -r tests/e2e/requirements.txt
 
-      - name: Create kind config
-        run: |
-          cat <<EOF > kind-config.yaml
-          kind: Cluster
-          apiVersion: kind.x-k8s.io/v1alpha4
-          nodes:
-          - role: control-plane
-            extraPortMappings:
-            - containerPort: 30080
-              hostPort: 8501
-              protocol: TCP
-            - containerPort: 30081
-              hostPort: 8321
-              protocol: TCP
-          EOF
-
       - name: Create kind cluster
         uses: helm/kind-action@v1
         with:
           cluster_name: rag-e2e
-          config: kind-config.yaml
+          config: |
+            kind: Cluster
+            apiVersion: kind.x-k8s.io/v1alpha4
+            nodes:
+            - role: control-plane
+              extraPortMappings:
+              - containerPort: 30080
+                hostPort: 8501
+                protocol: TCP
+              - containerPort: 30081
+                hostPort: 8321
+                protocol: TCP
 
       - name: Verify cluster
         run: |
@@ -186,3 +181,4 @@ jobs:
           # Optional: Keep cluster for debugging on failure
           # Comment out to keep cluster running
           # kind delete cluster --name rag-e2e
+
