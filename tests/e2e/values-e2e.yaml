@@ -51,7 +51,7 @@ global:
   models:
     llama-3-2-3b-instruct:
       id: meta-llama/Llama-3.2-3B-Instruct
-      enabled: true
+      enabled: false
       device: "cpu"
       resources:
         requests:
@@ -125,4 +125,17 @@ llama-stack:
 # Data ingestion pipeline - disabled for basic e2e tests
 ingestion-pipeline:
   defaultPipeline:
+    enabled: false
+
+# Disable configure-pipeline for e2e tests
+configure-pipeline:
+  enabled: false
+
+# Disable mcp-servers for e2e tests
+mcp-servers:
+  enabled: false
+
+# Disable llm-service openshift specific features for e2e tests
+llm-service:
+  route:
     enabled: false
