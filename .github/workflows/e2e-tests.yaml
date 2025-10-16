@@ -55,9 +55,10 @@ jobs:
           kubectl wait --for=condition=ready --timeout=300s \
             pod -l name=opendatahub-operator-controller-manager -n openshift-operators
 
-          # Add a sleep to allow time for the CRDs to be established
-          echo "Waiting for CRDs to be established..."
-          sleep 30
+          # Wait for the InferenceService CRD to be established
+          echo "Waiting for InferenceService CRD to be established..."
+          kubectl wait --for=condition=Established --timeout=120s \
+            crd/inferenceservices.serving.kserve.io
 
       - name: Add Helm repository
         run: |

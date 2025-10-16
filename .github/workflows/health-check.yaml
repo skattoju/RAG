@@ -11,7 +11,7 @@ on:
 
 jobs:
   health-check-e2e-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     timeout-minutes: 60
 
     steps:
@@ -27,33 +27,38 @@ jobs:
         run: |
           pip install -r tests/e2e/requirements.txt
 
-      - name: Create kind config
-        run: |
-          cat <<EOF > kind-config.yaml
-          kind: Cluster
-          apiVersion: kind.x-k8s.io/v1alpha4
-          nodes:
-          - role: control-plane
-            extraPortMappings:
-            - containerPort: 30080
-              hostPort: 8501
-              protocol: TCP
-            - containerPort: 30081
-              hostPort: 8321
-              protocol: TCP
-          EOF
-
-      - name: Create kind cluster
-        uses: helm/kind-action@v1
-        with:
-          cluster_name: rag-e2e
-          config: kind-config.yaml
+      - name: MicroShift OpenShift Cluster
+        uses: container-tools/microshift-action@v0.3
 
       - name: Verify cluster
         run: |
           kubectl cluster-info
           kubectl get nodes
           kubectl get pods -A
+
+      - name: Install OpenDataHub Operator
+        run: |
+          cat <<EOF | kubectl apply -f -
+          apiVersion: operators.coreos.com/v1alpha1
+          kind: Subscription
+          metadata:
+            name: opendatahub-operator
+            namespace: openshift-operators
+          spec:
+            channel: fast
+            name: opendatahub-operator
+            source: community-operators
+            sourceNamespace: openshift-marketplace
+          EOF
+
+          # Wait for the operator to be ready
+          kubectl wait --for=condition=ready --timeout=300s \
+            pod -l name=opendatahub-operator-controller-manager -n openshift-operators
+
+          # Wait for the InferenceService CRD to be established
+          echo "Waiting for InferenceService CRD to be established..."
+          kubectl wait --for=condition=Established --timeout=120s \
+            crd/inferenceservices.serving.kserve.io
 
       - name: Add Helm repository
         run: |
@@ -64,6 +69,9 @@ jobs:
         run: |
           # Create namespace
           kubectl create namespace rag-e2e || true
+
+          # Build chart dependencies
+          helm dependency build deploy/helm/rag
 
           # Install the chart with e2e values
           helm install rag deploy/helm/rag \
