@@ -40,6 +40,13 @@ spec:
             - name: TAVILY_SEARCH_API_KEY
               value: {{ (index .Values "llama-stack").secrets.TAVILY_SEARCH_API_KEY | quote }}
             {{- end }}
+            {{- if .Values.suggestedQuestions }}
+            - name: RAG_QUESTION_SUGGESTIONS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "rag.fullname" . }}-suggested-questions
+                  key: RAG_QUESTION_SUGGESTIONS
+            {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
